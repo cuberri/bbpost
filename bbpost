@@ -1,0 +1,211 @@
+#!/bin/bash
+
+#
+# Author:: Christophe Uberri <cuberri@gmail.com>
+#
+# Copyright 2013, Christophe Uberri <cuberri@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+#-------------------------------------------------------------------------------
+# bbpost control script (may be a base for an init.d script)
+# 
+# supported operations :
+#   - start : start the command server
+#   - stop  : stop the command server
+#   - restart : stop + start
+#   - healthcheckstatus : perform a basic GET operation on the /status resource
+#
+#  The start operation creates a pid file in the current directory, while the 
+#  stop operation tries to delete it after killing the cmdsrv process.
+#
+#  The status operation is based on the combination of pgrep and the presence of
+#  the pid file.
+#-------------------------------------------------------------------------------
+
+BASE_DIR=$(cd -P $(dirname $BASH_SOURCE) && pwd)
+BIN=python
+APP_SCRIPT="${BASE_DIR}/bbpost.py"
+PID_FILE="${BASE_DIR}/bbpost.pid"
+
+LOG_FILE="${BASE_DIR}/bbpost.log"
+
+OPT_VERBOSE="off"
+
+STATUS_RUNNING=0
+STATUS_STOPPED=1
+STATUS_UNKNOWN=2
+
+usage(){
+    echo "Usage: $0 [options] {start|stop|status|restart|healthcheckstatus}"
+    echo ""
+    echo "options :"
+    echo "  -h : Print usage"
+    echo "  -v : Verbose mode"
+    echo ""
+    echo "Example : $0 status"
+}
+
+print_env(){
+    echo "=="
+    echo "== BASE_DIR    : ${BASE_DIR}"
+    echo "== APP_SCRIPT  : ${APP_SCRIPT}"
+    echo "== PID_FILE    : ${PID_FILE}"
+    echo "== LOG_FILE    : ${LOG_FILE}"
+    echo "=="
+    echo ""
+}
+
+start(){
+    status > /dev/null 2>&1
+    
+    if [[ $STATUS_RUNNING == $ret ]]; then
+        echo "Cannot start application : already running : $(cat ${PID_FILE})"
+        echo "If you know the application is not currently running, please delete de pid file ${PID_FILE}"
+        return 1
+    fi
+
+    if [[ $STATUS_UNKNOWN == $ret ]]; then
+        echo "Cannot start application : unknown status..."
+        return 2
+    fi
+
+    if [[ $STATUS_STOPPED == $ret ]]; then
+        echo "Starting application..."
+        cd ${BASE_DIR}
+        # TODO : deal with stdout / stderr
+        ${BIN} ${APP_SCRIPT} >> ${LOG_FILE} 2>&1 &
+        echo $! > ${PID_FILE}
+        echo "pid saved in ${PID_FILE} : $(cat ${PID_FILE})"
+        return 0
+    fi
+
+    echo "Could not start application"
+    return 3
+}
+
+stop(){
+    status > /dev/null 2>&1
+
+    if [[ $STATUS_RUNNING == $ret ]]; then
+        local pid_pidfile=$(cat ${PID_FILE})
+        echo "Sending TERM signal to application with pid : ${pid_pidfile}"
+        kill -15 ${pid_pidfile}
+        if [[ ! 0 -eq $? ]]; then
+            echo "Warning : the kill command failed !"
+        fi
+        rm ${PID_FILE}
+        return 0
+    fi
+
+    if [[ $STATUS_STOPPED == $ret ]]; then
+        echo "Application seems to be already stopped."
+        echo "If you know the application is currently running, please kill it manually."
+        return 1
+    fi
+
+    if [[ $STATUS_UNKNOWN == $ret ]]; then
+        echo "Application is in an unknown status. Please check its status by running this script with the 'status' operation"
+        return 1
+    fi
+
+    return 1
+}
+
+status(){
+    local pid_pgrep=$(pgrep -fo ${APP_SCRIPT})
+
+    # STOPPED = no pid file and empty pgrep
+    if [[ ! -f ${PID_FILE} && -z "${pid_pgrep}" ]]; then
+        echo "[STATUS][STOPPED] No pid file ${PID_FILE} and pgrep return no running process"
+        ret=$STATUS_STOPPED
+        return
+    fi
+
+    # START = pid file and pgrep are consistent
+    if [[ -f ${PID_FILE} && ! -z "${pid_pgrep}" && $(cat ${PID_FILE}) == ${pid_pgrep} ]]; then
+        echo "[STATUS][RUNNING] pid file and pgrep are consistent"
+        ret=$STATUS_RUNNING
+        return
+    fi
+
+    # UNKNOWN = pidfile and pgrep are not consistent
+    echo "[STATUS][UNKNOWN] Could not determine application status (pgrep and pidfile are not consistent)"
+    ret=$STATUS_UNKNOWN
+}
+
+restart(){
+    stop && start
+}
+
+healthcheckstatus(){
+    local port=$(grep bindport bbpost.cfg | cut -d'=' -f2 | tr -d '\r\n')
+    cd ${BASE_DIR}
+    curl -XGET "http://localhost:${port}/status"
+}
+
+while getopts "hv" OPTION
+do
+    case $OPTION in
+        h)
+            usage
+            exit 0
+            ;;
+        v)
+            OPT_VERBOSE="on"
+            ;;
+        ?)
+            usage
+            exit 1
+        ;;
+    esac
+done
+
+# we shift all the options in order to be able to read the mandatory params
+shift $(($OPTIND-1))
+
+OPERATION=$1
+
+[[ $# < 1 ]] && usage && exit 1
+
+if [[ "on" == $OPT_VERBOSE ]]; then
+    print_env
+fi
+
+case $OPERATION in
+    healthcheckstatus)
+        healthcheckstatus
+        exit $?
+        ;;
+    status)
+        status
+        exit $?
+        ;;
+    start)
+        start
+        exit $?
+        ;;
+    stop)
+        stop
+        exit $?
+        ;;
+    restart)
+        restart
+        exit $?
+        ;;
+    ?)
+        usage
+        exit 1
+        ;;
+esac

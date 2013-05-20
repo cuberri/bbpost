@@ -1,0 +1,50 @@
+This is the sample json body from bitbucket documentation
+
+- raw :
+{
+    "canon_url": "https://bitbucket.org",
+    "commits": [
+        {
+            "author": "marcus",
+            "branch": "featureA",
+            "files": [
+                {
+                    "file": "somefile.py",
+                    "type": "modified"
+                }
+            ],
+            "message": "Added some featureA things",
+            "node": "d14d26a93fd2",
+            "parents": [
+                "1b458191f31a"
+            ],
+            "raw_author": "Marcus Bertrand <marcus@somedomain.com>",
+            "raw_node": "d14d26a93fd28d3166fa81c0cd3b6f339bb95bfe",
+            "revision": 3,
+            "size": -1,
+            "timestamp": "2012-05-30 06:07:03",
+            "utctimestamp": "2012-05-30 04:07:03+00:00"
+        }
+    ],
+    "repository": {
+        "absolute_url": "/marcus/project-x/",
+        "fork": false,
+        "is_private": true,
+        "name": "Project X",
+        "owner": "marcus",
+        "scm": "hg",
+        "slug": "project-x",
+        "website": ""
+    },
+    "user": "marcus"
+}
+
+- inline :
+{"canon_url": "https://bitbucket.org", "commits": [{"author": "marcus", "branch": "featureA", "files": [{"file": "somefile.py", "type": "modified"} ], "message": "Added some featureA things", "node": "d14d26a93fd2", "parents": ["1b458191f31a"], "raw_author": "Marcus Bertrand <marcus@somedomain.com>", "raw_node": "d14d26a93fd28d3166fa81c0cd3b6f339bb95bfe", "revision": 3, "size": -1, "timestamp": "2012-05-30 06:07:03", "utctimestamp": "2012-05-30 04:07:03+00:00"} ], "repository": {"absolute_url": "/marcus/project-x/", "fork": false, "is_private": true, "name": "Project X", "owner": "marcus", "scm": "hg", "slug": "project-x", "website": ""}, "user": "marcus"}
+
+- inline url encoded :
+%7B%22canon_url%22%3A%20%22https%3A%2F%2Fbitbucket.org%22%2C%20%22commits%22%3A%20%5B%7B%22author%22%3A%20%22marcus%22%2C%20%22branch%22%3A%20%22featureA%22%2C%20%22files%22%3A%20%5B%7B%22file%22%3A%20%22somefile.py%22%2C%20%22type%22%3A%20%22modified%22%7D%20%5D%2C%20%22message%22%3A%20%22Added%20some%20featureA%20things%22%2C%20%22node%22%3A%20%22d14d26a93fd2%22%2C%20%22parents%22%3A%20%5B%221b458191f31a%22%5D%2C%20%22raw_author%22%3A%20%22Marcus%20Bertrand%20%3Cmarcus%40somedomain.com%3E%22%2C%20%22raw_node%22%3A%20%22d14d26a93fd28d3166fa81c0cd3b6f339bb95bfe%22%2C%20%22revision%22%3A%203%2C%20%22size%22%3A%20-1%2C%20%22timestamp%22%3A%20%222012-05-30%2006%3A07%3A03%22%2C%20%22utctimestamp%22%3A%20%222012-05-30%2004%3A07%3A03%2B00%3A00%22%7D%20%5D%2C%20%22repository%22%3A%20%7B%22absolute_url%22%3A%20%22%2Fmarcus%2Fproject-x%2F%22%2C%20%22fork%22%3A%20false%2C%20%22is_private%22%3A%20true%2C%20%22name%22%3A%20%22Project%20X%22%2C%20%22owner%22%3A%20%22marcus%22%2C%20%22scm%22%3A%20%22hg%22%2C%20%22slug%22%3A%20%22project-x%22%2C%20%22website%22%3A%20%22%22%7D%2C%20%22user%22%3A%20%22marcus%22%7D
+
+- example :
+
+curl -X POST "http://localhost:8055/bbpost/bbpush" -d "payload=%7B%22canon_url%22%3A%20%22https%3A%2F%2Fbitbucket.org%22%2C%20%22commits%22%3A%20%5B%7B%22author%22%3A%20%22marcus%22%2C%20%22branch%22%3A%20%22featureA%22%2C%20%22files%22%3A%20%5B%7B%22file%22%3A%20%22somefile.py%22%2C%20%22type%22%3A%20%22modified%22%7D%20%5D%2C%20%22message%22%3A%20%22Added%20some%20featureA%20things%22%2C%20%22node%22%3A%20%22d14d26a93fd2%22%2C%20%22parents%22%3A%20%5B%221b458191f31a%22%5D%2C%20%22raw_author%22%3A%20%22Marcus%20Bertrand%20%3Cmarcus%40somedomain.com%3E%22%2C%20%22raw_node%22%3A%20%22d14d26a93fd28d3166fa81c0cd3b6f339bb95bfe%22%2C%20%22revision%22%3A%203%2C%20%22size%22%3A%20-1%2C%20%22timestamp%22%3A%20%222012-05-30%2006%3A07%3A03%22%2C%20%22utctimestamp%22%3A%20%222012-05-30%2004%3A07%3A03%2B00%3A00%22%7D%20%5D%2C%20%22repository%22%3A%20%7B%22absolute_url%22%3A%20%22%2Fmarcus%2Fproject-x%2F%22%2C%20%22fork%22%3A%20false%2C%20%22is_private%22%3A%20true%2C%20%22name%22%3A%20%22Project%20X%22%2C%20%22owner%22%3A%20%22marcus%22%2C%20%22scm%22%3A%20%22hg%22%2C%20%22slug%22%3A%20%22project-x%22%2C%20%22website%22%3A%20%22%22%7D%2C%20%22user%22%3A%20%22marcus%22%7D"
