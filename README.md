@@ -69,6 +69,29 @@ This request creates a job that will launch the preconfigured demo project
 
 ## bbpost behind Apache2
 
+You may consider usging an Apache2 web server backed by bbpost. Here is an 
+example of a vhost configuration in that purpose :
+
+```xml
+<VirtualHost *:80>
+    ProxyPass /bbpost http://localhost:8055/bbpost
+    ProxyPassReverse /bbpost http://localhost:8055/bbpost
+    ProxyRequests Off
+    ProxyPreserveHost On
+
+    # 63.246.22.222  : Bitbucket
+    # your_host_name : local machine
+    <Proxy http://localhost:8055/bbpost*>
+        Order deny,allow
+        Allow from 63.246.22.222
+        Allow from 127.0.0.1
+        Allow from localhost
+        Allow from <your_host_name>
+        Deny from all 
+    </Proxy>
+</VirtualHost>
+```
+
 Jobs Configuration
 ==================
 
