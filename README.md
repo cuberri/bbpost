@@ -79,11 +79,12 @@ example of a vhost configuration in that purpose :
     ProxyRequests Off
     ProxyPreserveHost On
 
-    # 63.246.22.222  : Bitbucket
+    # 131.103.20.165 131.103.20.166 : Bitbucket
     # your_host_name : local machine
     <Proxy http://localhost:8055/bbpost*>
         Order deny,allow
-        Allow from 63.246.22.222
+        Allow from 131.103.20.165
+        Allow from 131.103.20.165
         Allow from 127.0.0.1
         Allow from localhost
         Allow from <your_host_name>
@@ -100,6 +101,24 @@ file. The format of this file is a simple python-style (similar to th Windows
 INI files).
 
 Please, refer to the comments inside the `cmdsrv.cfg` file for details.
+
+Watchdog function
+=================
+
+A watchdog function exists in the `bbpost.sh` bash script. Its purpose is to
+keep the application running and mail a user if the application has been
+restarted or is in an unknown state.
+
+The function uses a `headers` file to set up the email configuration stuff
+(subject, sender and recipient).
+
+One could cron this function every minute to be sure the server is always
+running, as in the following example :
+
+    * * * * * /bin/bash /opt/local/bbpost/bbpost.sh watchdog
+
+I know, there is plainty of other methods to monitor an application, but this
+one is quite simple :)
 
 Development and Notes
 =====================
