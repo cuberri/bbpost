@@ -35,7 +35,7 @@ import logging
 import json
 import urlparse
 import abc
-from bottle import route, get, post, request, response, run, abort, error, HTTPResponse, HTTP_CODES
+from bottle import route, get, post, request, run, abort, error, HTTPResponse, HTTP_CODES
 
 # ------------------------------------------------------------------------------
 # GLOBAL
@@ -127,7 +127,7 @@ def callcmd():
     logging.info('Creating and submitting a Job for project [%s]', entity["repository"]["slug"])
     job_executor.submit_job(Job(entity, config))
 
-    response.status = 202
+    return HTTPResponse(status=203)
 
 # ------------------------------------------------------------------------------
 # ERRORS
@@ -178,6 +178,7 @@ class Job(object):
         self.workspace=config.get(self.project, 'workspace')
         self.branch=config.get(self.project, 'branch')
         self.update=config.getboolean(self.project, 'update')
+
         # check workspace dir
         if not os.path.exists(self.workspace):
             logging.debug("project[%s] The workspace path does not exist : create it", self.project)
@@ -225,6 +226,7 @@ class Job(object):
     def _launch_hook(self):
         try:
             logging.info('project[%s] Launching hook : %s', self.project, self.hook)
+	    # TODO : need to spawn
             ret = subprocess.Popen(shlex.split(self.hook), cwd=self.repository.local_target).wait()
             logging.debug('Command [%s] exited with return code [%s]' % (self.hook, ret))
             return ret
